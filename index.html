@@ -85,6 +85,10 @@
       text-decoration: none;
       color: inherit;
       display: block;
+      border: none;
+      text-align: left;
+      width: 100%;
+      font-family: inherit;
     }
     .loja:hover {
       transform: translateY(-4px);
@@ -96,6 +100,7 @@
       height: 140px;
       object-fit: cover;
       background: #eee;
+      display: block;
     }
     .loja-info { padding: 14px; }
     .loja-info h3 { font-size: 17px; margin-bottom: 4px; }
@@ -136,6 +141,154 @@
       color: #999;
       font-size: 13px;
     }
+
+    /* ============================================
+       MODAL DA LOJA
+       ============================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.ativo { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 18px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      animation: slideUp 0.25s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-fechar {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      transition: background 0.2s;
+    }
+    .modal-fechar:hover { background: rgba(0,0,0,0.8); }
+
+    .modal-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background: #eee;
+      display: block;
+    }
+
+    .modal-conteudo { padding: 22px; }
+
+    .modal-conteudo h2 {
+      font-size: 24px;
+      margin-bottom: 6px;
+      color: #222;
+    }
+
+    .modal-categoria {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 14px;
+    }
+
+    .modal-infos {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .modal-info-item {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .modal-info-item strong {
+      display: block;
+      font-size: 11px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .modal-status {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .modal-btn {
+      width: 100%;
+      padding: 16px;
+      background: #e63946;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .modal-btn:hover { background: #c1121f; }
+    .modal-btn:active { transform: scale(0.98); }
+
+    .modal-btn.secundario {
+      background: #f1f1f1;
+      color: #333;
+      margin-top: 8px;
+      font-size: 14px;
+      padding: 12px;
+    }
+    .modal-btn.secundario:hover { background: #e5e5e5; }
+
+    .modal-aviso {
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -159,11 +312,54 @@
     © 2025 Cardápios Digitais — Francisco Morato/SP
   </footer>
 
+  <!-- ============================================
+       MODAL DA LOJA
+       ============================================ -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <button class="modal-fechar" onclick="fecharModal()" aria-label="Fechar">✕</button>
+      <img class="modal-img" id="modalImg" src="" alt="">
+      <div class="modal-conteudo">
+        <h2 id="modalNome"></h2>
+        <div class="modal-categoria" id="modalCategoria"></div>
+
+        <span class="status" id="modalStatus"></span>
+
+        <div class="modal-infos">
+          <div class="modal-info-item">
+            <strong>⏱ Tempo</strong>
+            <span id="modalTempo"></span>
+          </div>
+          <div class="modal-info-item">
+            <strong>🛵 Entrega</strong>
+            <span id="modalTaxa"></span>
+          </div>
+        </div>
+
+        <button class="modal-btn" id="modalBtnPedir" onclick="irParaLoja()">
+          🛒 Fazer pedido
+        </button>
+
+        <button class="modal-btn secundario" onclick="fecharModal()">
+          Continuar navegando
+        </button>
+
+        <p class="modal-aviso">
+          Ao clicar em "Fazer pedido", você será redirecionado para o site da loja.
+        </p>
+      </div>
+    </div>
+  </div>
+
   <script>
     let lojas = [];
+    let lojaAtual = null;
+
     const grid = document.getElementById('grid');
     const busca = document.getElementById('busca');
     const categoriasEl = document.getElementById('categorias');
+    const modalOverlay = document.getElementById('modalOverlay');
+
     let categoriaAtiva = 'Todas';
     let categoriasRenderizadas = false;
 
@@ -230,11 +426,9 @@
       }
 
       filtradas.forEach(l => {
-        const card = document.createElement('a');
-        card.href = l.link;
-        card.target = '_blank';
-        card.rel = 'noopener';
+        const card = document.createElement('button');
         card.className = 'loja';
+        card.type = 'button';
         card.innerHTML = `
           <img class="loja-img" src="${l.imagem}" alt="${l.nome}" onerror="this.src='https://via.placeholder.com/400x140?text=Sem+Imagem'">
           <div class="loja-info">
@@ -249,9 +443,65 @@
             </div>
           </div>
         `;
+        card.onclick = () => abrirModal(l);
         grid.appendChild(card);
       });
     }
+
+    // ============================================
+    // MODAL
+    // ============================================
+    function abrirModal(loja) {
+      lojaAtual = loja;
+
+      document.getElementById('modalImg').src = loja.imagem;
+      document.getElementById('modalImg').alt = loja.nome;
+      document.getElementById('modalNome').textContent = loja.nome;
+      document.getElementById('modalCategoria').textContent = loja.categoria;
+      document.getElementById('modalTempo').textContent = loja.tempo;
+      document.getElementById('modalTaxa').textContent = loja.taxa;
+
+      const statusEl = document.getElementById('modalStatus');
+      statusEl.className = 'status ' + (loja.aberto ? 'aberto' : 'fechado');
+      statusEl.textContent = loja.aberto ? '● Aberto agora' : '● Fechado';
+
+      const btn = document.getElementById('modalBtnPedir');
+      if (loja.aberto) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.innerHTML = '🛒 Fazer pedido';
+      } else {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+        btn.innerHTML = '😴 Loja fechada no momento';
+      }
+
+      modalOverlay.classList.add('ativo');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function fecharModal() {
+      modalOverlay.classList.remove('ativo');
+      document.body.style.overflow = '';
+      lojaAtual = null;
+    }
+
+    function irParaLoja() {
+      if (!lojaAtual) return;
+      window.open(lojaAtual.link, '_blank', 'noopener');
+    }
+
+    // Fechar ao clicar fora
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) fecharModal();
+    });
+
+    // Fechar com ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') fecharModal();
+    });
 
     busca.addEventListener('input', renderizar);
     carregarLojas();
